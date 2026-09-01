@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  logo      String?
+  country   String?
+  founded   Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  players   Player[]
+  outgoing  Transfer[] @relation("fromTeam")
+  incoming  Transfer[] @relation("toTeam")
+
+  @@map("teams")
+}
+
+model Player {
+  id           String   @id @default(cuid())
+  name         String
+  position     String
+  age          Int?
+  nationality  String?
+  photo        String?
+  marketValue  BigInt   @default(0)
+  currentTeamId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  currentTeam Team?
+  transfers   Transfer[]
+
+  @@map("players")
+}
+
+model Transfer {
+  id        String   @id @default(cuid())
+  playerId  String
+  fromTeamId String
+  toTeamId  String
+  fee       BigInt
+  type      String   // "Bonservis", "Bedelsiz", "Kiralık", "Serbest"
+  date      DateTime @default(now())
+  season    String
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  fromTeam Team   @relation("fromTeam", fields: [fromTeamId], references: [id], onDelete: Cascade)
+  toTeam   Team   @relation("toTeam", fields: [toTeamId], references: [id], onDelete: Cascade)
+
+  @@map("transfers")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
